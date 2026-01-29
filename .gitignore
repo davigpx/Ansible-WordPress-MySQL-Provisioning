@@ -1,0 +1,50 @@
+# Ansible
+ansible.log
+*.retry
+.ansible/
+
+# SSH Keys
+pc1
+pc2
+*.pem
+*.key
+id_rsa*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Vault
+vault_pass.txt
+.vault_password
+
+# Sensitive
+vars.yml.encrypted
+.env
+.env.local
+
+# Logs
+*.log
+logs/
+
+# Cache
+.cache/
+*.cache
+
+# OS
+Thumbs.db
+.DS_Store

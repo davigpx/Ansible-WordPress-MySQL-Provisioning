@@ -1,0 +1,59 @@
+---
+- hosts: all
+  become: true
+  gather_facts: true
+  pre_tasks:
+    - name: Validate minimum requirements
+      ansible.builtin.assert:
+        that:
+          - ansible_python_interpreter is defined
+          - ansible_os_family in ['Debian', 'RedHat', 'Ubuntu']
+        fail_msg: "This playbook requires Python 3 and Debian/Ubuntu/RedHat based systems"
+      tags: always
+
+- hosts: wordpress
+  vars_files:
+    - vars.yml
+  roles:
+    - role: apache
+  pre_tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+      become: true
+      tags: always
+  post_tasks:
+    - name: Display WordPress URL
+      ansible.builtin.debug:
+        msg: "✅ WordPress is ready at http://{{ ansible_host }}"
+      tags: always
+
+- hosts: mysql
+  vars_files:
+    - vars.yml
+  roles:
+    - role: mysql
+  pre_tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+      become: true
+      tags: always
+  post_tasks:
+    - name: Display MySQL info
+      ansible.builtin.debug:
+        msg: "✅ MySQL configured with database {{ wp_db_name }}"
+      tags: always
+
+- hosts: wordpress
+  vars_files:
+    - vars.yml
+  roles:
+    - role: wordpress
+  tags: wordpress
+  post_tasks:
+    - name: Final WordPress status
+      ansible.builtin.debug:
+        msg: "✅ WordPress installation completed at {{ wp_dir }}"

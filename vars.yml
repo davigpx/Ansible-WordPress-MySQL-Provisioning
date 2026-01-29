@@ -1,0 +1,22 @@
+---
+# WordPress Database Configuration
+wp_db_name: 'wordpress_db'
+wp_db_user: 'wordpress_user'
+wp_db_password: "{{ lookup('env', 'WP_DB_PASSWORD') | default('12345') }}"
+mysql_host: '192.168.1.12'
+wp_dir: '/srv/www/wordpress'
+
+# Apache Configuration
+apache_vhost_name: 'wordpress'
+apache_document_root: '/srv/www/wordpress'
+apache_port: 80
+
+# PHP Configuration
+php_version: '8.2'
+
+# Security
+wp_file_permissions: '0755'
+wp_config_permissions: '0640'
+
+# This file should be encrypted with ansible-vault for production
+# Usage: ansible-vault encrypt vars.yml

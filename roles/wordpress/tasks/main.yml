@@ -1,0 +1,106 @@
+---
+- name: Create WordPress directory
+  ansible.builtin.file:
+    path: "{{ wp_dir }}"
+    state: directory
+    mode: "{{ wp_file_permissions }}"
+    owner: www-data
+    group: www-data
+  become: true
+  tags: [setup, wordpress]
+
+- name: Download and extract WordPress
+  ansible.builtin.unarchive:
+    src: https://wordpress.org/latest.tar.gz
+    dest: "{{ wp_dir }}"
+    remote_src: true
+    owner: www-data
+    group: www-data
+    extra_opts: [--strip-components=1]
+  become: true
+  tags: [setup, wordpress]
+
+- name: Set correct permissions on WordPress directory
+  ansible.builtin.file:
+    path: "{{ wp_dir }}"
+    mode: "{{ wp_file_permissions }}"
+    owner: www-data
+    group: www-data
+    recurse: true
+  become: true
+  tags: wordpress
+
+- name: Copy WordPress config sample
+  ansible.builtin.copy:
+    src: "{{ wp_dir }}/wp-config-sample.php"
+    dest: "{{ wp_dir }}/wp-config.php"
+    remote_src: true
+    owner: www-data
+    group: www-data
+    mode: "{{ wp_config_permissions }}"
+  become: true
+  tags: wordpress
+
+- name: Configure WordPress database details
+  ansible.builtin.replace:
+    path: "{{ wp_dir }}/wp-config.php"
+    regexp: "{{ item.regexp }}"
+    replace: "{{ item.replace }}"
+  loop:
+    - {regexp: 'database_name_here', replace: "{{ wp_db_name }}"}
+    - {regexp: 'username_here', replace: "{{ wp_db_user }}"}
+    - {regexp: 'password_here', replace: "{{ wp_db_password }}"}
+    - {regexp: 'localhost', replace: "{{ mysql_host }}"}
+  become: true
+  tags: wordpress
+  no_log: true
+
+- name: Generate WordPress security keys
+  ansible.builtin.uri:
+    url: https://api.wordpress.org/secret-key/1.1/salt/
+    return_content: true
+  register: wp_keys
+  changed_when: false
+  tags: wordpress
+
+- name: Configure WordPress security keys and salts
+  ansible.builtin.blockinfile:
+    path: "{{ wp_dir }}/wp-config.php"
+    block: "{{ wp_keys.content }}"
+    marker: "// {mark} ANSIBLE MANAGED KEYS"
+    insertbefore: "^/\\* That's all"
+  become: true
+  tags: wordpress
+  no_log: true
+
+- name: Create WordPress .htaccess file
+  ansible.builtin.copy:
+    content: |
+      # BEGIN WordPress
+      <IfModule mod_rewrite.c>
+      RewriteEngine On
+      RewriteBase /
+      RewriteRule ^index\.php$ - [L]
+      RewriteCond %{REQUEST_FILENAME} !-f
+      RewriteCond %{REQUEST_FILENAME} !-d
+      RewriteRule . /index.php [L]
+      </IfModule>
+      # END WordPress
+    dest: "{{ wp_dir }}/.htaccess"
+    owner: www-data
+    group: www-data
+    mode: '0644'
+  become: true
+  tags: wordpress
+
+- name: Verify WordPress installation
+  ansible.builtin.stat:
+    path: "{{ wp_dir }}/wp-config.php"
+  register: wp_config
+  tags: wordpress
+
+- name: Display WordPress installation status
+  ansible.builtin.debug:
+    msg: "✅ WordPress successfully installed at {{ wp_dir }}"
+  when: wp_config.stat.exists
+  tags: wordpress
