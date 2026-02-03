@@ -42,26 +42,6 @@ ANSIBLE/
 
 ### 1. Arquivo de Inventário (`hosts`)
 
-#### Opção A: Contêineres (3 contêineres)
-
-Este inventário usa conexão Docker e 3 contêineres: 2 para WordPress e 1 para MySQL.
-
-```ini
-[wordpress]
-wordpress-1 ansible_python_interpreter=/usr/bin/python3
-wordpress-2 ansible_python_interpreter=/usr/bin/python3
-
-[mysql]
-mysql-1 ansible_python_interpreter=/usr/bin/python3
-
-[all:vars]
-ansible_connection=docker
-ansible_timeout=30
-ansible_retries=3
-```
-
-#### Opção B: Máquinas físicas (SSH)
-
 Edite os IPs dos seus servidores:
 
 ```ini
@@ -85,7 +65,7 @@ Configure seus dados de banco de dados:
 wp_db_name: 'wordpress_db'
 wp_db_user: 'wordpress_user'
 wp_db_password: "{{ lookup('env', 'WP_DB_PASSWORD') | default('please_change_this') }}"
-mysql_host: 'mysql-1'
+mysql_host: '192.168.1.12'
 wp_dir: '/srv/www/wordpress'
 ```
 

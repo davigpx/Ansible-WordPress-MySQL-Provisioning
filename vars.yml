@@ -3,7 +3,7 @@
 wp_db_name: 'wordpress_db'
 wp_db_user: 'wordpress_user'
 wp_db_password: "{{ lookup('env', 'WP_DB_PASSWORD') | default('12345') }}"
-mysql_host: 'mysql-1'
+mysql_host: '192.168.1.12'
 wp_dir: '/srv/www/wordpress'
 
 # Apache Configuration
